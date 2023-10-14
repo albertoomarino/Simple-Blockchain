@@ -23,31 +23,27 @@ Initially the parameters from the `macro.txt` file are read and values are assig
 
 - [Introduction](#introduction)
 - [Characteristics](#characteristics)
-- [Installation](#installation)
 - [Usage](#usage)
 - [License](#license)
 
 ## Introduction
 
-The Web Technologies project was useful for learning the basics of web development. As mentioned above, different programming languages and markup were used to gain knowledge of how to work in the network environment.
+The Operating Systems project served as a valuable opportunity to enhance proficiency in C programming, explore core data structures, delve into process management, and delve into inter-process communication. As previously highlighted, a diverse range of resources were employed to gain a profound insight into the intricacies of operating within a system environment.
 
 ## Characteristics
 
 The repository consists of two folders:
-- Folder **lab**: contains six laboratory exercises with the various deliverables and implementations;
-- Folder **project**: contains the code of the actual website, the requirements provided by the professor, and the report describing the entire project in full.
-
-## Installation
-
-To install the following project, you must have installed a software application on your machine that provides a local development environment for creating and testing websites and web applications (I used **XAMPP**).
-
-To clone the repository locally, simply run in your *Git Bash* the command `git clone https://github.com/albertoomarino/TWeb.git`.
+- Folder **project**: contains the code of the project;
+- Document "TestoProgetto.pdf": contains the project track.
 
 ## Usage
 
-Once you have installed the project and launched it, you need to create a database called `getbook`. At this point, from the XAMPP web interface, you can import the complete database in the `getbook.sql` file into the `database` folder.
+Once you have installed the project and launched it, you are ready to execute the code
 
-After registering to the site rather than logging in, it is possible to navigate within the platform to view all implemented functions. For more details on navigation and implementation, please refer to the `Report.pdf`.
+The commands that will be used, as you can see from the `makefile`, are as follows:
+- command `make all`: this command is used to compile the project. When executed, three binaries will be generated: master, users, and nodes. Each binary corresponds to a specific part of our system. This command is useful for compiling the entire project in a single operation;
+- command `make run`: this command is used to run the main application, in our case master. When you execute make run, the master programme will be started with the argument "macro.txt", which can be a specific input file or a desired configuration. This command simplifies the execution of the master application with custom parameters;
+- command `make clean`: this command is useful for cleaning up the project. Running make clean will remove all object (.o) files generated during compilation and the master, users, and nodes binaries. This step is important to keep the project folder clean and remove temporary or unnecessary files.
 
 ## License
 
