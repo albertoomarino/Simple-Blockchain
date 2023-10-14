@@ -34,7 +34,7 @@ The Operating Systems project served as a valuable opportunity to enhance profic
 
 The repository consists of two folders:
 - Folder **project**: contains the code of the project;
-- Document "TestoProgetto.pdf": contains the project track.
+- Document **TestoProgetto.pdf**: contains the project track.
 
 ## Usage
 
