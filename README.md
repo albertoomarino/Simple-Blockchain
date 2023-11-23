@@ -1,4 +1,4 @@
-# SO - Operating Systems
+# OS - Operating Systems
 
 We intend to simulate a ledger containing the data of monetary transactions between different users.
 
