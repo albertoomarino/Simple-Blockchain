@@ -1,4 +1,4 @@
-# Operating systems
+# Operating Systems
 
 ## Table of Contents
 
