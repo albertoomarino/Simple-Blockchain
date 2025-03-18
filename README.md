@@ -1,4 +1,4 @@
-# Operating Systems
+# Simple Blockchain
 
 ## Table of Contents
 
