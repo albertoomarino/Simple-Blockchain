@@ -6,19 +6,19 @@ struct p_info *ip;
 struct block *ledger;
 struct msqid_ds buf;
 
-/* Memorizzazione macro da file */
+/* Storing macros from files */
 void read_macro(char *argv) {
 	char macro[30];
 	FILE *apriFile;
 	int val;
 
-	/* Apertura file macro.txt */
+	/* Opening macro.txt file */
 	if ((apriFile = fopen(argv, "r")) == NULL) {
 		fprintf(stderr, "ERROR fopen ");
 		TEST_ERROR;
 	}
 
-	/* Lettura valori da file macro.txt */
+	/* Reading values ​​from macro.txt file */
 	while (fscanf(apriFile, "%s" "%d", macro, &val) != EOF) {
 		if (strcmp(macro, "SO_USERS_NUM") == 0)
 			SO_USERS_NUM = val;
@@ -30,14 +30,14 @@ void read_macro(char *argv) {
 			SO_SIM_SEC = val;
 	}
 
-	/* Chiusura file macro.txt */
+	/* Closing macro.txt file */
 	if (fclose(apriFile)) {
 		fprintf(stderr, "ERROR fclose ");
 		TEST_ERROR;
 	}
 }
 
-/* Attesa di un secondo */
+/* Waiting for a second */
 void one_sec_waited_master() {
 	struct timespec time;
 
@@ -49,20 +49,20 @@ void one_sec_waited_master() {
 	}
 }
 
-/* Rimozione risorse IPC */
+/* IPC Resource Removal */
 void clear() {
-	/* Deallocazione memoria condivisa */
+	/* Shared Memory Deallocation */
 	shmdt(ip);
 	shmctl(shmid_ip, IPC_RMID, NULL);
 	shmctl(shmid_ledger, IPC_RMID, NULL);
 	shmctl(shmid_block, IPC_RMID, NULL);
 
-	/* Deallocazione semafori */
+	/* Traffic light deallocation */
 	semctl(semid_ip, 0, IPC_RMID);
 	semctl(semid_led, 0, IPC_RMID);
 }
 
-/* Stampa solo utenti maggiori e minori */
+/* Print only major and minor users */
 void print_max_min_users(struct p_info *ptr) {
 	int min, max, pos_min, pos_max, i;
 
@@ -95,7 +95,7 @@ void print_max_min_users(struct p_info *ptr) {
 	}
 }
 
-/* Stampa solo nodi maggiori e minori */
+/* Print only major and minor nodes */
 void print_max_min_nodes(struct p_info *ptr) {
 	int min, max, pos_min, pos_max, i;
 
@@ -119,49 +119,49 @@ void print_max_min_nodes(struct p_info *ptr) {
 	printf("Node | PID: %d --> MAX Balance: %d \n", ptr[pos_max].proc_pid, max);
 }
 
-/* Calcola i bilanci dei processi leggendo nel libro mastro */
-void read_balance_ledger() { /* Eseguita ogni secondo: aggiorno il bilancio (proc_balance) di ogni processo (guarda struttura p_indo nell'header) */
+/* Calculate process balances by reading the ledger */
+void read_balance_ledger() { /* Run every second: update the proc_balance of each process (see p_indo structure in the header) */
 	int i, j, k;
 
-	/* block[0]: contatore di quanti blocchi nel libro mastro sono scritti */
-	for (i = 0; i < SO_USERS_NUM; i++) { /* Scandisce tutti i processi utente */
+	/* block[0]: counter of how many blocks in the ledger are written */
+	for (i = 0; i < SO_USERS_NUM; i++) { /* Scans all user processes */
 		ip[i].proc_balance = SO_BUDGET_INIT;
-		for (j = 0; j < block[0]; j++) { /* Scandisce ogni blocco del libro mastro */
-			for (k = 0; k < SO_BLOCK_SIZE; k++) { /* Scandisce ogni singola transazione */
-				if (ip[i].proc_pid == ledger[j].array_trans[k].sender) { /* Se il processo i è il mandante della transazione */
-					ip[i].proc_balance -= ledger[j].array_trans[k].quantity; /* Bilancio di i meno quantità della transazione inviata */
+		for (j = 0; j < block[0]; j++) { /* Scans every block of the ledger */
+			for (k = 0; k < SO_BLOCK_SIZE; k++) { /* Scans every single transaction */
+				if (ip[i].proc_pid == ledger[j].array_trans[k].sender) { /* If process i is the sender of the transaction */
+					ip[i].proc_balance -= ledger[j].array_trans[k].quantity; /* Balance of i minus quantity of the sent transaction */
 				}
-				if (ip[i].proc_pid == ledger[j].array_trans[k].receiver) { /* Se il processo i è il ricevente della transazione */
-					ip[i].proc_balance += ledger[j].array_trans[k].quantity; /* Bilancio di i più quantità della transazione ricevuta */
+				if (ip[i].proc_pid == ledger[j].array_trans[k].receiver) { /* If process i is the receiver of the transaction */
+					ip[i].proc_balance += ledger[j].array_trans[k].quantity; /* Balance of the most quantity of the received transaction */
 				}
 			}
 		}
 	}
 
-	/* Aggiorna il bilancio dei nodi con l'ultima transazione del blocco (reward) */
-	for (i = SO_USERS_NUM; i < SO_USERS_NUM + SO_NODES_NUM; i++) { /* Scandisce tutti i nodi */
+	/* Update the nodes balance with the latest transaction of the block (reward) */
+	for (i = SO_USERS_NUM; i < SO_USERS_NUM + SO_NODES_NUM; i++) { /* Scans all nodes */
 		ip[i].proc_balance = 0;
-		for (j = 0; j < block[0]; j++) { /* Scandisce ogni blocco del libro mastro */
-			if (ip[i].proc_pid == ledger[j].array_trans[SO_BLOCK_SIZE - 1].receiver) { /* L'ultima transazione in ogni blocco del libro mastro */
-				ip[i].proc_balance += ledger[j].array_trans[SO_BLOCK_SIZE - 1].quantity; /* Bilancio di i più quantità della transazione ricevuta */
+		for (j = 0; j < block[0]; j++) { /* Scans every block of the ledger */
+			if (ip[i].proc_pid == ledger[j].array_trans[SO_BLOCK_SIZE - 1].receiver) { /* The last transaction in each block of the ledger */
+				ip[i].proc_balance += ledger[j].array_trans[SO_BLOCK_SIZE - 1].quantity; /* Balance of the most quantity of the received transaction */
 			}
 		}
 	}
 }
 
-/* Stampa i processi */
+/* Print processes */
 void print_proc(struct p_info *ip) {
 	int i;
 
-	read_balance_ledger(); /* Leggo il libro mastro e aggiorno p_info */
+	read_balance_ledger(); /* I read the ledger and update p_info */
 
 	if (SO_USERS_NUM > MAX_PROC) {
 		if (SO_NODES_NUM > MAX_PROC) {
-			/* CASO 1: stampa processi utenti e nodi con maggior e minor budget */
+			/* CASE 1: Print user processes and nodes with higher and lower budgets */
 			print_max_min_users(ip);
 			print_max_min_nodes(ip);
 		} else if (SO_NODES_NUM <= MAX_PROC) {
-			/* CASO 2: stampa processi utenti con maggior e minor budget e tutti i nodi */
+			/* CASE 2: Print user processes with higher and lower budget and all nodes */
 			print_max_min_users(ip);
 
 			for (i = SO_USERS_NUM; i < SO_USERS_NUM + SO_NODES_NUM; i++) {
@@ -170,7 +170,7 @@ void print_proc(struct p_info *ip) {
 		}
 	} else if (SO_USERS_NUM <= MAX_PROC) {
 		if (SO_NODES_NUM > MAX_PROC) {
-			/* CASO 3: stampa processi nodo con maggior e minor budget e tutti gli utenti */
+			/* CASE 3: Print node processes with higher and lower budget and all users */
 			for (i = 0; i < SO_USERS_NUM; i++) {
 				if (ip[i].term == true) {
 					printf("User | PID: %d -->     Balance: %d [terminated]\n", ip[i].proc_pid, ip[i].proc_balance);
@@ -180,7 +180,7 @@ void print_proc(struct p_info *ip) {
 			}
 			print_max_min_nodes(ip);
 		} else if (SO_NODES_NUM <= MAX_PROC) {
-			/* CASO 4: stampa tutti i processi utenti e nodo */
+			/* CASE 4: Print all user and node processes */
 			for (i = 0; i < SO_USERS_NUM; i++) {
 				if (ip[i].term == true) {
 					printf("User | PID: %d -->     Balance: %d [terminated]\n", ip[i].proc_pid, ip[i].proc_balance);
@@ -196,12 +196,12 @@ void print_proc(struct p_info *ip) {
 	}
 }
 
-/* Stampa la fine della simulazione */
+/* Print the end of the simulation */
 void print_end(char *string) {
 	int j;
 
 	printf("\n-*-*-*-*-*- THE SIMULATION ENDS NOW -*-*-*-*-*-\n\n");
-	printf("TERMINATION REASON: %s\n", string); /* String: motivo terminazione */
+	printf("TERMINATION REASON: %s\n", string); /* String: termination reason */
 	print_proc(ip);
 	printf("\nUsers processes terminated: %d\n", users_term);
 
@@ -211,42 +211,42 @@ void print_end(char *string) {
 		printf("Occupied blocks in the ledger: %d\n\n", block[0]);
 	}
 
-	printf("\n\nNUMBER OF TRANSACTIONS IN THE TRANSACTION POOL:\n\n"); /* Lista di transazioni ricevute da processare */
+	printf("\n\nNUMBER OF TRANSACTIONS IN THE TRANSACTION POOL:\n\n"); /* List of transactions received to be processed */
 
-	for (j = SO_USERS_NUM; j < SO_USERS_NUM + SO_NODES_NUM; j++) { /* Cicla tutti i nodi per stampare i messaggi rimanenti nella TP */
-		if ((msgqid = msgget(ip[j].proc_pid, 0)) == -1) { /* Metto in msgqid l'attacco della coda di messaggi del processo j */
+	for (j = SO_USERS_NUM; j < SO_USERS_NUM + SO_NODES_NUM; j++) { /* Loop through all nodes to print remaining messages in TP */
+		if ((msgqid = msgget(ip[j].proc_pid, 0)) == -1) { /* I put in msgqid the message queue attack of process j */
 			fprintf(stderr, "ERROR msgget ");
 			TEST_ERROR;
 		}
-		if ((msgctl(msgqid, IPC_STAT, &buf)) == -1) { /* Aggiorno buf per vedere quante transazioni sono rimaste al nodo j */
+		if ((msgctl(msgqid, IPC_STAT, &buf)) == -1) { /* I refresh buf to see how many transactions are left at node j */
 			fprintf(stderr, "ERROR msgctl ");
 			TEST_ERROR;
 		}
-		printf("Node | PID -->  %d    Remaining transaction --> %ld \n", ip[j].proc_pid, buf.msg_qnum); /* Stampa il numero di messaggi relativi al nodo j */
+		printf("Node | PID -->  %d    Remaining transaction --> %ld \n", ip[j].proc_pid, buf.msg_qnum); /* Print the number of messages related to node j */
 	}
 	printf("\n\n");
 }
 
-/* Gestione segnali */
+/* Signal Management */
 void handle_signal(int sig) {
 	switch (sig) {
-		case SIGALRM: /* Segnale di allarme: tempo scaduto */
+		case SIGALRM: /* Alarm signal: time up */
 			print_end("Seconds of the simulation passed!\n");
 			kill(0, SIGTERM);
 			break;
 	
-		case SIGUSR1: /* Segnale ricevuto dai nodi quando il libro mastro è pieno */
+		case SIGUSR1: /* Signal received from nodes when the ledger is full */
 			print_end("The maximum ledger size has been reached!\n");
 			kill(0, SIGTERM);
 			break;
 	
-		case SIGINT: /* Segnale di terminazione mandato dall'utente (CTRL-C) */
+		case SIGINT: /* User-sent termination signal (CTRL-C) */
 			print_end("Signal CTRL-C received!\n");
 			kill(0, SIGTERM);
 			break;
 	
-		case SIGTERM: /* Segnale di fine simulazione */
-			waitpid(0, NULL, 0); /* Attesa morte tutti processi */
+		case SIGTERM: /* End of simulation signal */
+			waitpid(0, NULL, 0); /* Waiting for death all processes */
 			clear();
 			exit(EXIT_SUCCESS);
 			break;

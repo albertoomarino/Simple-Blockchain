@@ -20,13 +20,13 @@
 #include <sys/msg.h>
 #include <signal.h>
 
-/* Definizione struttura degli errori (data dal professore) */
+/* Error Structure Definition */
 #define TEST_ERROR if (errno) { fprintf(stderr, "nel file: %s a linea: %d, con pid %d; ERRORE: %d (%s)\n", \
   __FILE__, __LINE__, getpid(), errno, strerror(errno)); exit(EXIT_FAILURE); }
 
-/* Parametri definiti a tempo di compilazione */
-#define SO_REGISTRY_SIZE 1000 /* Numero massimo di blocchi nel libro mastro */
-#define SO_BLOCK_SIZE 10 /* Numero di transazioni contenute in un blocco */
+/* Parameters defined at compile time */
+#define SO_REGISTRY_SIZE 1000 /* Maximum number of blocks in the ledger */
+#define SO_BLOCK_SIZE 10 /* Number of transactions contained in a block */
 
 #define NSEC 1000000000
 
@@ -34,15 +34,15 @@
 
 #define MAX_PROC 15
 
-/* Mmoria condivisa */
+/* Shared Memory */
 #define SHMID_LEDGER 76438
 #define SHMID_BLOCK 46320
 
-/* Semafori */
+/* Traffic lights */
 #define SEMKEY_P_INFO 85674
 #define SEMKEY_LEDGER 22886
 
-/* Struttura di una transazione */
+/* Structure of a transaction */
 struct transaction {
 	long timestamp;
 	pid_t sender;
@@ -51,7 +51,7 @@ struct transaction {
 	int reward;
 };
 
-/* Struttura per avere le informazioni di ogni processo */
+/* Structure to have information of each process */
 struct p_info {
 	pid_t proc_pid;
 	int proc_balance;
@@ -59,13 +59,13 @@ struct p_info {
 	bool term;
 };
 
-/* Struttura di un blocco del libro mastro */
+/* Structure of a ledger block */
 struct block {
-	struct transaction array_trans[SO_BLOCK_SIZE]; /* Array di transazioni in un singolo blocco. Un blocco contiene SO_BLOCK_SIZE transazioni */
+	struct transaction array_trans[SO_BLOCK_SIZE]; /* Array of transactions in a single block. A block contains SO_BLOCK_SIZE transactions */
 	int id;
 };
 
-/* Struttura dei messaggi */
+/* Message structure */
 struct message {
 	long mtype;
 	struct transaction mtext;
