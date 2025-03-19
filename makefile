@@ -36,3 +36,4 @@ run:
 clean:
 	rm -f *.o
 	rm master users nodes
+	
