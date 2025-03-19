@@ -21,12 +21,17 @@
 #include <signal.h>
 
 /* Error Structure Definition */
-#define TEST_ERROR if (errno) { fprintf(stderr, "nel file: %s a linea: %d, con pid %d; ERRORE: %d (%s)\n", \
-  __FILE__, __LINE__, getpid(), errno, strerror(errno)); exit(EXIT_FAILURE); }
+#define TEST_ERROR                                                             \
+	if (errno)                                                                   \
+	{                                                                            \
+		fprintf(stderr, "nel file: %s a linea: %d, con pid %d; ERRORE: %d (%s)\n", \
+						__FILE__, __LINE__, getpid(), errno, strerror(errno));             \
+		exit(EXIT_FAILURE);                                                        \
+	}
 
 /* Parameters defined at compile time */
 #define SO_REGISTRY_SIZE 1000 /* Maximum number of blocks in the ledger */
-#define SO_BLOCK_SIZE 10 /* Number of transactions contained in a block */
+#define SO_BLOCK_SIZE 10			/* Number of transactions contained in a block */
 
 #define NSEC 1000000000
 
@@ -43,7 +48,8 @@
 #define SEMKEY_LEDGER 22886
 
 /* Structure of a transaction */
-struct transaction {
+struct transaction
+{
 	long timestamp;
 	pid_t sender;
 	pid_t receiver;
@@ -52,7 +58,8 @@ struct transaction {
 };
 
 /* Structure to have information of each process */
-struct p_info {
+struct p_info
+{
 	pid_t proc_pid;
 	int proc_balance;
 	int pos;
@@ -60,13 +67,15 @@ struct p_info {
 };
 
 /* Structure of a ledger block */
-struct block {
+struct block
+{
 	struct transaction array_trans[SO_BLOCK_SIZE]; /* Array of transactions in a single block. A block contains SO_BLOCK_SIZE transactions */
 	int id;
 };
 
 /* Message structure */
-struct message {
+struct message
+{
 	long mtype;
 	struct transaction mtext;
 };

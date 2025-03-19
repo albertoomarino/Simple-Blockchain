@@ -1,138 +1,157 @@
 #include "nodes.h"
 
-int main(int argc, char *argv[]) {
-	/* Usate anche in nodes_functions.c */
+int main(int argc, char *argv[])
+{
+	/* Used also in nodes_functions.c */
 	extern int SO_TP_SIZE;
 	extern int msgqid_node, semid_led, semid_ip, quantity_reward, j;
 	extern bool isDeclared;
 	extern struct block *ledger;
 	extern struct block curr_block;
 
-	/* Usate in nodes.c */
+	/* Used in nodes.c */
 	int shmid_block, shmid_ledger, *block;
 	struct message mymsg;
 	struct msqid_ds buf;
 	struct sigaction sa;
 	sigset_t my_mask;
 
-	/* True se SO_MIN_TRANS_PROC_NSEC e SO_MAX_TRANS_PROC_NSEC sono presenti in macro.txt, false altrimenti */
+	/* True if SO_MIN_TRANS_PROC_NSEC and SO_MAX_TRANS_PROC_NSEC are present in macro.txt, false otherwise */
 	isDeclared = false;
 
-	/* Seme per la rand() */
+	/* Seed for rand() */
 	srand(getpid());
 
-	/* Memorizzazione macro da file */
+	/* Store macros from file */
 	read_macro(argv[1]);
 
-	/* Segnali */
+	/* Signals */
 	sa.sa_handler = handle_signal;
 	sa.sa_flags = 0;
 	sigemptyset(&my_mask);
 	sa.sa_mask = my_mask;
 	sigaction(SIGTERM, &sa, NULL);
-	sigaction(SIGINT, &sa, NULL); /* Di default fa break */
+	sigaction(SIGINT, &sa, NULL); /* By default, it breaks the process */
 
-	/* Creo la coda di messaggi e l'assegno a msgqid_node */
-	if ((msgqid_node = msgget(getpid(), IPC_CREAT | 0666)) == -1) {
+	/* Create the message queue and assign it to msgqid_node */
+	if ((msgqid_node = msgget(getpid(), IPC_CREAT | 0666)) == -1)
+	{
 		fprintf(stderr, "ERROR msgget ");
 		TEST_ERROR;
 	}
 
-	/* Copio la struttura di msqid_ds nel buffer puntato da buf (inizializzo) */
-	if ((msgctl(msgqid_node, IPC_STAT, &buf)) == -1) {
+	/* Copy the msqid_ds structure into the buffer pointed by buf (initialize it) */
+	if ((msgctl(msgqid_node, IPC_STAT, &buf)) == -1)
+	{
 		fprintf(stderr, "ERROR msgctl ");
 		TEST_ERROR;
 	}
 
-	/* Setto la dimensione di byte massimi nella coda di messaggi */
+	/* Set the maximum byte size for the message queue */
 	buf.msg_qbytes = SO_TP_SIZE * sizeof(struct transaction);
 
-	/* Setto la coda di messaggi con la dimensione massima di byte */
-	if ((msgctl(msgqid_node, IPC_SET, &buf)) == -1) {
+	/* Set the message queue with the maximum byte size */
+	if ((msgctl(msgqid_node, IPC_SET, &buf)) == -1)
+	{
 		fprintf(stderr, "ERROR msgctl ");
 		TEST_ERROR;
 	}
 
-	/* Ottengo l'identificatore della memoria per il contatore dei blocchi del libro mastro */
-	if ((shmid_block = shmget(SHMID_BLOCK, sizeof(int), 0)) == -1) {
+	/* Get the memory identifier for the block counter in the ledger */
+	if ((shmid_block = shmget(SHMID_BLOCK, sizeof(int), 0)) == -1)
+	{
 		fprintf(stderr, "ERROR shmget ");
 		TEST_ERROR;
 	}
 
-	/* Metto in block l'indirizzo di attacco e lo converto in intero */
-	if ((block = (int *)shmat(shmid_block, NULL, 0)) == (void *)-1) {
+	/* Attach to the block memory address and convert it to an integer */
+	if ((block = (int *)shmat(shmid_block, NULL, 0)) == (void *)-1)
+	{
 		fprintf(stderr, "ERROR shmat ");
 		TEST_ERROR;
 	}
 
-	/* Ottengo l'identificatore della memoria del libro mastro */
-	if ((shmid_ledger = shmget(SHMID_LEDGER, sizeof(struct block) * (SO_REGISTRY_SIZE), 0)) == -1) {
+	/* Get the memory identifier for the ledger */
+	if ((shmid_ledger = shmget(SHMID_LEDGER, sizeof(struct block) * (SO_REGISTRY_SIZE), 0)) == -1)
+	{
 		fprintf(stderr, "ERROR shmget ");
 		TEST_ERROR;
 	}
 
-	/* Metto in ledger l'indirizzo di attacco e lo converto in struct di block */
-	if ((ledger = (struct block *)shmat(shmid_ledger, NULL, 0)) == (void *)-1) {
+	/* Attach to the ledger memory address and convert it to a struct of blocks */
+	if ((ledger = (struct block *)shmat(shmid_ledger, NULL, 0)) == (void *)-1)
+	{
 		fprintf(stderr, "ERROR shmat ");
 		TEST_ERROR;
 	}
 
-	/* Metto in semid_led l'identificatore del set SEMKEY_LEDGER */
-	if ((semid_led = semget(SEMKEY_LEDGER, 0, 0)) == -1) {
+	/* Get the semaphore identifier for the SEMKEY_LEDGER set */
+	if ((semid_led = semget(SEMKEY_LEDGER, 0, 0)) == -1)
+	{
 		fprintf(stderr, "ERROR semget ");
 		TEST_ERROR;
 	}
 
-	/* Metto in semid_ip l'identificatore del set SEMKEY_P_INFO */
-	if ((semid_ip = semget(SEMKEY_P_INFO, 0, 0)) == -1) {
+	/* Get the semaphore identifier for the SEMKEY_P_INFO set */
+	if ((semid_ip = semget(SEMKEY_P_INFO, 0, 0)) == -1)
+	{
 		fprintf(stderr, "ERROR semget ");
 		TEST_ERROR;
 	}
 
-	/* Attende la creazione dei processi */
+	/* Wait for the creation of processes */
 	wait_for_zero();
 
-	while (1) {
+	while (1)
+	{
 		quantity_reward = 0;
-		if ((msgctl(msgqid_node, IPC_STAT, &buf)) == -1) { /* Aggiorno buf per vedere quanti messaggi ci sono in coda */
+		if ((msgctl(msgqid_node, IPC_STAT, &buf)) == -1)
+		{ /* Update buf to see how many messages are in the queue */
 			fprintf(stderr, "ERROR msgctl ");
 			TEST_ERROR;
 		}
 
-		if (buf.msg_qnum >= SO_BLOCK_SIZE - 1) { /* Se ci sono abbastanza messaggi creo il blocco (SO_BLOCK_SIZE - 1 transazioni ricevute da utenti) */
-			for (j = 0; j < SO_BLOCK_SIZE - 1; j++) { /* Leggo SO_BLOCK_SIZE - 1 transazioni dalla coda e le inserisco nel blocco */
-				if (msgrcv(msgqid_node, &mymsg, sizeof(struct transaction), 0, 0) == -1) {
+		if (buf.msg_qnum >= SO_BLOCK_SIZE - 1)
+		{ /* If there are enough messages, create the block (SO_BLOCK_SIZE - 1 transactions received from users) */
+			for (j = 0; j < SO_BLOCK_SIZE - 1; j++)
+			{ /* Read SO_BLOCK_SIZE - 1 transactions from the queue and insert them into the block */
+				if (msgrcv(msgqid_node, &mymsg, sizeof(struct transaction), 0, 0) == -1)
+				{
 					fprintf(stderr, "ERROR msgrcv ");
 					TEST_ERROR;
-				} /* Riempio il blocco di transazioni */
+				} /* Fill the block with transactions */
 
-				quantity_reward += mymsg.mtext.reward;	 /* Sommo la quantità di reward accedendo al campo reward della transaction mtext */
-				curr_block.array_trans[j] = mymsg.mtext; /* Aggiunge nella posizione j del blocco la transazione appena letta dalla coda */
+				quantity_reward += mymsg.mtext.reward;	 /* Add the reward amount by accessing the reward field of the transaction mtext */
+				curr_block.array_trans[j] = mymsg.mtext; /* Adds the transaction just read from the queue at position j of the block */
 			}
 
-			/* Nell'ultima posizione del blocco aggiungo la transazione di reward (che è l'ultima della coda di messaggi ad entrare nel blocco) */
+			/* In the last position of the block, add the reward transaction (which is the last to enter the block from the message queue) */
 			add_reward_trans();
 
-			/* Nessun altro può scrivere da questo momento sul libro mastro */
-			if (reserveSem(semid_led) == -1) { /* Sezione di ingresso */
+			/* No one else can write to the ledger from now on */
+			if (reserveSem(semid_led) == -1)
+			{ /* Entry section */
 				fprintf(stderr, "ERROR reserveSem ");
 				TEST_ERROR;
 			}
 
-			if (block[0] < SO_REGISTRY_SIZE) { /* Sezione critica: scrittura del blocco di transazioni nel libro mastro */
-				curr_block.id = block[0];	   /* Aggiorno id blocco con il numero di blocchi correnti */
-				one_sec_waited_nodes();		   /* Simulo attesa elaborazione blocco */
-				ledger[block[0]] = curr_block; /* Scrivo tutto il blocco nel libro mastro */
-				block[0]++;					   /* Incremento numero effettivo di blocchi scritti nel libro mastro */
+			if (block[0] < SO_REGISTRY_SIZE)
+			{																 /* Critical section: writing the transaction block into the ledger */
+				curr_block.id = block[0];			 /* Update block id with the current number of blocks */
+				one_sec_waited_nodes();				 /* Simulate block processing wait */
+				ledger[block[0]] = curr_block; /* Write the entire block into the ledger */
+				block[0]++;										 /* Increment the actual number of blocks written into the ledger */
 
-				if (block[0] == SO_REGISTRY_SIZE) {
-					kill(getppid(), SIGUSR1); /* Spazio esaurito quindi avviso il master */
-					pause();				  /* Metto in pausa il processo e aspetto segnale SIGTERM */
+				if (block[0] == SO_REGISTRY_SIZE)
+				{
+					kill(getppid(), SIGUSR1); /* Space is exhausted, so notify the master */
+					pause();									/* Pause the process and wait for SIGTERM signal */
 				}
 			}
 
-			/* Rilascia il semaforo, altri processi possono scrivere sul libro mastro */
-			if (releaseSem(semid_led) == -1) { /* Sezione di uscita */
+			/* Release the semaphore, other processes can write to the ledger */
+			if (releaseSem(semid_led) == -1)
+			{ /* Exit section */
 				fprintf(stderr, "ERROR releaseSem ");
 				TEST_ERROR;
 			}
