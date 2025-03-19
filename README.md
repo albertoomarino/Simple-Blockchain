@@ -33,7 +33,7 @@ User processes are responsible for creating and sending monetary transactions to
        - The transaction reward, which is a percentage `SO_REWARD` of the selected value, rounded, with a minimum of 1;
        - The transaction amount will be the selected value minus the reward.
    
-   Example: The user has a balance of 100. Randomly selecting a number between 2 and 100, they pick 50. If `SO_REWARD` is 20 (indicating a 20% reward), then by executing the transaction, the user will transfer 40 to the recipient user and 10 to the node that successfully processed the transaction.
+   Example: the user has a balance of 100. Randomly selecting a number between 2 and 100, they pick 50. If `SO_REWARD` is 20 (indicating a 20% reward), then by executing the transaction, the user will transfer 40 to the recipient user and 10 to the node that successfully processed the transaction.
    
    - If the balance is less than 2, the process does not send any transactions.
 
@@ -154,17 +154,17 @@ For the reasons introduced in the lectures, remember to define the `GNU_SOURCE` 
 
 Once you have installed the project and launched it, you are ready to execute the code. Below are the essential commands, as specified in the `Makefile`:
 
-- **Compile the project**: Generates three binaries (`master`, `users`, and `nodes`), each corresponding to a specific system component.
+- **Compile the project**: generates three binaries (`master`, `users`, and `nodes`), each corresponding to a specific system component.
   ```bash
   make all
   ```
 
-- **Run the main application**: Starts the `master` program with the argument `"macro.txt"`, which serves as a specific input file or configuration.
+- **Run the main application**: starts the `master` program with the argument `"macro.txt"`, which serves as a specific input file or configuration.
   ```bash
   make run
   ```
 
-- **Clean the project**: Removes all object files (`.o`) and the generated binaries to maintain a clean directory.
+- **Clean the project**: removes all object files (`.o`) and the generated binaries to maintain a clean directory.
   ```bash
   make clean
   ```
